@@ -1,0 +1,54 @@
+#!/bin/bash
+# live-build hook script for installing packages after debootstrap
+# This script runs in the chroot environment during live system build
+
+# Exit on error
+set -e
+
+APT_OPTS="-y --no-install-recommends"
+
+# Update package lists
+apt-get update
+
+# Install base system utilities
+apt-get install $APT_OPTS \
+    zram-tools \
+    bash-completion \
+    e2fsprogs \
+    btrfs-progs \
+    sudo \
+    nano \
+    vim-tiny \
+    less \
+    apt-transport-https \
+    ca-certificates \
+    gnupg \
+    wget \
+    curl
+
+# Install minimal LXDE desktop environment
+apt-get install $APT_OPTS \
+    lxde-core \
+    lxde-icon-theme \
+    lxde-settings-daemon \
+    lxappearance \
+    desktop-base \
+    xserver-xorg
+
+# Install desktop applications
+apt-get install $APT_OPTS \
+    lxterminal \
+    galculator \
+    firefox-esr
+
+# Install networking utilities
+apt-get install $APT_OPTS \
+    iputils-ping \
+    ethtool \
+    traceroute \
+    dnsutils \
+    dnsmasq \
+    isc-dhcp-client \
+    wpasupplicant \
+    iw \
+    wireguard-tools

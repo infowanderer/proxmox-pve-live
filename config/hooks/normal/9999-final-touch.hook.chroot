@@ -1,0 +1,42 @@
+#!/bin/bash
+# live-build hook script for final configuration after other hook scripts finish
+# This script runs in the chroot environment during live system build
+
+# Disable unnecessary services
+systemctl disable pve-ha-crm pve-ha-lrm corosync pve-sdn-commit pve-firewall-commit
+
+# Mask unnecessary services
+systemctl mask pve-firewall spiceproxy
+
+# Set root password
+passwd << EOD
+live
+live
+EOD
+
+# Add custom alias
+cat <<EOF >>/etc/bash.bashrc
+
+alias ls='ls --color=auto'
+alias l='ls -lah'
+alias ll='ls -lh'
+alias la='ls -lAh'
+alias cl='clear'
+alias ip='ip --color'
+alias bridge='bridge -color'
+alias free='free -h'
+alias df='df -h'
+alias du='du -hs'
+EOF
+
+# Limit journald log
+cat <<EOF >> /etc/systemd/journald.conf
+SystemMaxUse=400M
+SystemKeepFree=1G
+EOF
+
+# Store journald logs in RAM only
+cat <<EOF >> /etc/systemd/journald.conf
+Storage=volatile
+ForwardToSyslog=no
+EOF

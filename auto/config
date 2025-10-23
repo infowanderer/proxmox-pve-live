@@ -1,0 +1,14 @@
+#!/bin/sh
+
+lb config noauto \
+     --bootloaders "grub-efi syslinux" \
+     --architectures amd64 \
+     --distribution trixie \
+     --clean --color \
+     --iso-volume PVE-9-Live \
+     --debootstrap-options "--variant=minbase" \
+     --archive-areas "main" \
+     --apt-source-archives false \
+     --memtest memtest86+ \
+     --bootappend-live "persistence boot=live components hostname=pve-live net.ifnames=0 biosdevname=0" \
+     "${@}"
