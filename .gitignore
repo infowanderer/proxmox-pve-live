@@ -5,3 +5,9 @@ config/bootstrap
 config/chroot
 config/common
 config/source
+config/hooks/live
+config/package-lists
+config/hooks/normal
+!config/hooks/normal/0100-install-packages.hook.chroot
+!config/hooks/normal/0200-install-proxmox.hook.chroot
+!config/hooks/normal/9999-final-touch.hook.chroot
