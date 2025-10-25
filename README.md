@@ -156,3 +156,7 @@
    ```
    lb clean
    ```
+
+## License
+
+This project redistributes **Proxmox VE** (Copyright © 2008–2026 Proxmox Server Solutions GmbH) under the **AGPL-3.0** license.
