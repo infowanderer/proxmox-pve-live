@@ -1,0 +1,60 @@
+name: Build and Release ISO
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        required: true
+        type: string
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:13
+      options: --privileged -v /home/runner/work:/home/runner/work
+    steps:
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y git live-build
+
+      - name: Install github cli
+        run: |
+          mkdir -p -m 755 /etc/apt/keyrings
+          wget -nv -O /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+            https://cli.github.com/packages/githubcli-archive-keyring.gpg
+          chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+          mkdir -p -m 755 /etc/apt/sources.list.d
+          echo "deb [arch=$(dpkg --print-architecture) \
+            signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] \
+            https://cli.github.com/packages stable main" | \
+            tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          apt update
+          apt install -y gh
+
+      - uses: actions/checkout@v5
+      - name: Build ISO
+        run: |
+          cd ${{ github.workspace }}
+          lb config && lb build
+          mv live-image-amd64.hybrid.iso pve-9_live_lxde.iso
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: pve-9_live_lxde.iso
+          path: ${{ github.workspace }}/pve-9_live_lxde.iso
+
+      - name: Create Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chown -R $(id -u):$(id -g) ${{ github.workspace }}
+          date_str="$(date -u +%Y-%m-%d)"
+          title="Build: ${date_str}"
+          notes="Proxmox VE 9 Live ISO with minimal LXDE desktop"
+          tag=${{ github.event.inputs.release_tag }}
+
+          gh release create $tag \
+            --title "$title" \
+            --notes "$notes" \
+            ${{ github.workspace }}/pve-9_live_lxde.iso
