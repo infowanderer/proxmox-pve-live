@@ -12,6 +12,9 @@
 - Get the latest PVE-9 Live ISO here: [Release page](https://github.com/LongQT-sea/pve-live/releases)
 - Or build your own: [How to build](#how-to-build)
 
+> [!Important]
+> **Password:** `live` (for both `user` and `root` accounts)
+
 ---
 
 ## Create a bootable PVE-9 live USB with a persistent volume
