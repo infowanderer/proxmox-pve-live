@@ -11,6 +11,12 @@ ALLOW_NETWORK=192.168.0.0/16
 HOSTNAME="$(cat /etc/hostname)"
 WORKGROUP="WORKGROUP"
 
+# Install samba if needed
+if ! command -v smbd &>/dev/null; then
+    echo "Installing Samba..."
+    apt update -y && apt install -y samba
+fi
+
 # Check MOUNT_POINT
 if [ ! -d "$MOUNT_POINT" ]; then
     echo "$MOUNT_POINT does not exist."
@@ -113,4 +119,4 @@ systemctl restart smbd
 
 echo ''
 echo "Samba setup completed successfully!"
-echo "Remember to configure firewall if needed:"
+echo "Remember to configure firewall if needed"

@@ -4,7 +4,7 @@
 * Supports persistent filesystems across reboots (if configured).
 * Use it to test Proxmox VE without installing it.
 * Or create a portable USB to run a live Proxmox VE system.
-* Can serve as an Unraid replacement if you manually configure Samba, accounts, and shared folders.
+* Can serve as an Unraid replacement, see [samba-server-setup.sh](./samba-server-setup.sh).
 
 ---
 
@@ -17,13 +17,18 @@
 
 ---
 
-## Create a bootable PVE-9 live USB with a persistent volume
+## Create a bootable PVE-9 live USB drive with a persistent volume
+  - [Windows](#windows)
+  - [Linux](#linux)
+  - [macOS](#macos)
+> [!Note]
+> You can modify GRUB at `PVE-LIVE/boot/grub/grub.cfg` after creating the live boot USB drive.
 
 ### Windows
 
-- **Lazy method:** Use [Rufus](https://github.com/pbatard/rufus/releases). After selecting the ISO file, adjust the **Persistent partition size** slider.
+- **Lazy method (slow):** Use [Rufus](https://github.com/pbatard/rufus/releases). After selecting the ISO file, adjust the **Persistent partition size** slider.
 
-- **Manual method:** Open **Windows Terminal** or **PowerShell** as Administrator.
+- **Manual method (faster):** Open **Windows Terminal** or **PowerShell** as Administrator.
     > Replace `X` with your USB disk number:
     ```
     diskpart
@@ -34,14 +39,14 @@
     cre par pri size=2000
     format fs=fat32 quick label=pve-live
     active
-    assign
+    assign letter=V
     cre par pri
     exit
     ```
 > [!Note]
 > After running these commands, it will create **2 partitions**:
-> - Partition 1: Stores all ISO content.
-> - Partition 2: Will be formatted in Linux for persistent storage (see **4. Format** in [Linux](#linux) section).
+> - Partition 1: Mounted as `V:\`. Copy all files and folders from the live ISO to this partition.
+> - Partition 2: Will be formatted in Linux for persistent storage (see **Step 4: Format `/dev/sdX2`** in [Linux](#linux) section).
 
 ---
 
@@ -64,7 +69,7 @@
    a          # make bootable
    n          # new partition
    p          # primary
-   2          # partition 2
+   <enter>    # partition 2
    <enter>    # default start
    <enter>    # use rest of disk
    w          # write changes
@@ -127,13 +132,31 @@
 
 ## How to build
 
+You can build the ISO either automatically using **GitHub Actions** or **locally** on Debian
+
+### Build using GitHub Actions
+
+1. **Fork this repository** to your GitHub account.  
+2. Customization (optional)
+   - Hook scripts: `config/hooks/normal/`
+   - Add files to the root filesystem: `config/includes.chroot/`
+3. Navigate to the **Actions** tab and enable workflows.
+4. Select the **“Build and Release ISO”** workflow from the left sidebar.  
+5. Click the **“Run workflow”**, add a tag then click **“Run workflow”**.  
+6. Wait for the build to finish and the generated ISO will appear under:
+   - **Repo -> Actions -> Build and Release ISO -> Artifacts**.
+   - **Repo -> Release page**.
+
+---
+
+### Local build
+
 **Requirements:**
-- Host: Debian 13
+- Debian 13
 - Packages:
    ```
    apt update && apt install -y live-build git
    ```
-
 **Steps:**
 1. Clone the repository:
    ```
@@ -156,6 +179,8 @@
    ```
    lb clean
    ```
+
+---
 
 ## License
 
