@@ -42,6 +42,7 @@ apt-get install $APT_OPTS \
 apt-get install $APT_OPTS \
     lxterminal \
     galculator \
+    keepassxc \
     firefox-esr
     
 # Install additional applications
@@ -49,25 +50,20 @@ apt-get install $APT_OPTS \
     gocryptfs \
     sirikali \
     rclone \
-    rclone-browser \
-    digikam \
-    gthumb \
-    vlc
+    rclone-browser
 
 # Install security applications
-apt-get install $APT_OPTS \
-    lynis \
-    tiger \
-    tiger-otheros \
-    secure-delete \
-    pass \
-    tomb \
-    pass-extension-tomb \
-    firejail \
-    firejail-profiles \
-    firetools \
-    keepassxc
-    
+# apt-get install $APT_OPTS \
+#    lynis \
+#    tiger \
+#    tiger-otheros \
+#    secure-delete \
+#    pass \
+#    tomb \
+#    pass-extension-tomb \
+#    firejail \
+#    firejail-profiles \
+#    firetools \
     
 
 # Install networking utilities
