@@ -47,6 +47,7 @@ apt-get install $APT_OPTS \
 # Install additional applications
 apt-get install $APT_OPTS \
     gocryptfs \
+    sirikali \
     rclone \
     rclone-browser \
     digikam \
@@ -62,12 +63,10 @@ apt-get install $APT_OPTS \
     pass \
     tomb \
     pass-extension-tomb \
-    zulumount-gui \
-    libzulucrypt-plugins \
     firejail \
     firejail-profiles \
     firetools \
-    keepassxc \
+    keepassxc
     
     
 
