@@ -24,7 +24,10 @@ apt-get install $APT_OPTS \
     ca-certificates \
     gnupg \
     wget \
-    curl
+    curl \
+    ckb-next \
+    solaar \
+    synaptic
 
 # Install minimal LXDE desktop environment
 apt-get install $APT_OPTS \
@@ -40,6 +43,33 @@ apt-get install $APT_OPTS \
     lxterminal \
     galculator \
     firefox-esr
+    
+# Install additional applications
+apt-get install $APT_OPTS \
+    gocryptfs \
+    rclone \
+    rclone-browser \
+    digikam \
+    gthumb \
+    vlc
+
+# Install security applications
+apt-get install $APT_OPTS \
+    lynis \
+    tiger \
+    tiger-otheros \
+    secure-delete \
+    pass \
+    tomb \
+    pass-extension-tomb \
+    zulumount-gui \
+    libzulucrypt-plugins \
+    firejail \
+    firejail-profiles \
+    firetools \
+    keepassxc \
+    
+    
 
 # Install networking utilities
 apt-get install $APT_OPTS \
