@@ -1,150 +1,79 @@
 # Proxmox VE 9 Live Boot ISO Image
 
-* Build a fully customizable Proxmox VE 9 live boot image.
-* Supports persistent filesystems across reboots (if configured).
+* Build a fully customizable Proxmox VE 9 live boot ISO image.[^services]
+* Supports persistence filesystems across reboots (if configured).
 * Use it to test Proxmox VE without installing it.
 * Or create a portable USB to run a live Proxmox VE system.
-* Can serve as an Unraid replacement, see [samba-server-setup.sh](./samba-server-setup.sh).
+* Dual boot with Windows in a single SSD.
+* Lightweight LXDE desktop environment preconfigured.
 
 ---
 
-## Download
-- Get the latest PVE-9 Live ISO here: [Release page](https://github.com/LongQT-sea/pve-live/releases)
+## Usage
+- Get the prebuild PVE-Live ISO here: [Release page](https://github.com/LongQT-sea/pve-live/releases)
 - Or build your own: [How to build](#how-to-build)
 
 > [!Important]
-> **Password:** `live` (for both `user` and `root` accounts)
+> **Password:** `live` (for both `user` and `root` accounts)[^pass]
 
 ---
 
-## Create a bootable PVE-9 live USB drive with a persistent volume
-  - [Windows](#windows)
-  - [Linux](#linux)
-  - [macOS](#macos)
-> [!Note]
-> You can modify GRUB at `PVE-LIVE/boot/grub/grub.cfg` after creating the live boot USB drive.
+## Network Configuration
+By default, the `vmbr0` bridge obtains its IP from DHCP via ethernet.
 
-### Windows
+### WiFi Setup
+If no ethernet cable is connected, you can use WiFi instead. To connect to WiFi, use `wpa_supplicant` and `ifupdown2`:
+> Replace `SSID_NAME` with your Wifi SSID name, `WIFI_PASSWD` with your WiFi password.
+```
+# Configure WiFi
+wpa_passphrase "SSID_NAME" "WIFI_PASSWD" > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
 
-- **Lazy method (slow):** Use [Rufus](https://github.com/pbatard/rufus/releases). After selecting the ISO file, adjust the **Persistent partition size** slider.
+# Establish the Wi-Fi connection
+systemctl enable --now wpa_supplicant@wlan0
 
-- **Manual method (faster):** Open **Windows Terminal** or **PowerShell** as Administrator.
-    > Replace `X` with your USB disk number:
-    ```
-    diskpart
-    list disk
-    sel disk X
-    clean
-    con mbr
-    cre par pri size=2000
-    format fs=fat32 quick label=pve-live
-    active
-    assign letter=V
-    cre par pri
-    exit
-    ```
-> [!Note]
-> After running these commands, it will create **2 partitions**:
-> - Partition 1: Mounted as `V:\`. Copy all files and folders from the live ISO to this partition.
-> - Partition 2: Will be formatted in Linux for persistent storage (see **Step 4: Format `/dev/sdX2`** in [Linux](#linux) section).
+# Bring up the wlan0 interface and obtain an IP address via DHCP
+ifup wlan0
+```
+
+To automatically connect to WiFi at boot, uncomment the `auto wlan0` line in `/etc/network/interfaces` (requires a persistence filesystem to be configured beforehand).
+
+> [!Important]
+> Use the `vmbr1` bridge for VMs when your internet source is WiFi.
+
+> [!Tip]
+> If you're using ethernet only, remove or comment out the `auto wlan0` line from `/etc/network/interfaces` and configure a static IP for `vmbr0` interface to speed up boot time.
 
 ---
 
-### Linux
+## Create persistence filesystem
 
-> [!Note]
-> Replace `/dev/sdX` with your actual USB drive identifier.
+**Quick steps:**
+1. Create a new ext4 partition (on any drive: internal or external), label it `persistence`
+2. Add a file `persistence.conf` with the content: `/ union` to that partition
 
-1. Create partitions with fdisk:
-   ```
-   fdisk /dev/sdX
-   o          # new MBR table
-   n          # new partition
-   p          # primary
-   <enter>    # partition 1
-   <enter>    # default start
-   +2000M     # 2GB size
-   t          # change type
-   c          # W95 FAT32 (LBA)
-   a          # make bootable
-   n          # new partition
-   p          # primary
-   <enter>    # partition 2
-   <enter>    # default start
-   <enter>    # use rest of disk
-   w          # write changes
-   ```
+For detailed platform-specific instructions, see [persistence-setup.md](./persistence-setup.md)
 
-2. Format `/dev/sdX1` as FAT32 and label it `PVE-LIVE`:
-   ```
-   mkfs.vfat -F 32 -n "PVE-LIVE" /dev/sdX1
-   ```
-
-3. Mount `/dev/sdX1` and copy ISO content to it:
-   ```
-   mkdir /tmp/partition1 && mkdir /tmp/iso_mount
-   mount /dev/sdX1 /tmp/partition1
-   mount /path/to/pve-live-iso /tmp/iso_mount
-   cp -r /tmp/iso_mount/* /tmp/partition1/ && sync
-   ```
-
-4. Format `/dev/sdX2` with ext4 and label it `persistence`:
-   ```
-   mkfs.ext4 -L persistence /dev/sdX2
-   ```
-
-5. Mount `/dev/sdX2` and create `persistence.conf`:
-   ```
-   mkdir /tmp/partition2
-   mount /dev/sdX2 /tmp/partition2
-   echo "/ union" > /tmp/partition2/persistence.conf
-   umount /tmp/partition1 /tmp/iso_mount /tmp/partition2
-   ```
-
----
-
-### macOS
-
-> [!Note]
-> Replace `diskX` with your actual USB drive identifier.
-
-1. Create partitions with `diskutil`:
-   ```
-   diskutil list
-   diskutil partitionDisk diskX 2 MBR FAT32 "PVE-LIVE" 2g ExFAT "persistent" 0
-   diskutil unmountDisk /dev/diskX
-   sudo fdisk -e /dev/diskX <<< $'flag 1\nwrite\nexit\n'
-   diskutil mount diskXs1
-   ```
-
-2. Copy ISO contents to the USB:
-   - Download and extract 7-zip: https://www.7-zip.org/a/7z2501-mac.tar.xz
-   ```
-   cd ~/Downloads/7z2501-mac
-   ./7zz x ~/Downloads/pve-9_live_lxde.iso -o/Volumes/PVE-LIVE && sync
-   diskutil unmountDisk /dev/diskX
-   ```
-
-4. Boot from the USB and create the persistence partition:
-   - See **Step 4: Format `/dev/sdX2`** in the [Linux](#linux) section.
+> [!Tip]
+> **Dual Boot with Windows (UEFI):** You can install Proxmox VE Live on your internal hard drive alongside Windows. Use Windows Disk Management to shrink your drive, then create 2 new partitions:
+> 1. **FAT32 partition (3GB)** - Label it `PVE-LIVE` and copy all ISO contents to it
+> 2. **Unformatted partition** - Boot into Proxmox VE Live and format as ext4 with label `persistence` (see Linux Step 4-5 in [persistence-setup.md](./persistence-setup.md#linux))
 
 ---
 
 ## How to build
 
-You can build the ISO either automatically using **GitHub Actions** or **locally** on Debian
-
 ### Build using GitHub Actions
 
 1. **Fork this repository** to your GitHub account.  
 2. Customization (optional)
+
    - Hook scripts: `config/hooks/normal/`
    - Add files to the root filesystem: `config/includes.chroot/`
 3. Navigate to the **Actions** tab and enable workflows.
-4. Select the **“Build and Release ISO”** workflow from the left sidebar.  
+4. Select the **“Build ISO”** workflow from the left sidebar.  
 5. Click the **“Run workflow”**, add a tag then click **“Run workflow”**.  
 6. Wait for the build to finish and the generated ISO will appear under:
-   - **Repo -> Actions -> Build and Release ISO -> Artifacts**.
+   - **Repo -> Actions -> Build ISO -> Artifacts**.
    - **Repo -> Release page**.
 
 ---
@@ -185,3 +114,6 @@ You can build the ISO either automatically using **GitHub Actions** or **locally
 ## License
 
 This project redistributes **Proxmox VE** (Copyright © 2008–2026 Proxmox Server Solutions GmbH) under the **AGPL-3.0** license.
+
+[^services]: In `config/hooks/normal/9999-final-touch.hook.chroot`, these services are disabled: `pve-ha-crm pve-ha-lrm corosync pve-sdn-commit pve-firewall-commit`, and these are masked: `pve-firewall spiceproxy`.
+[^pass]: Can be configured in `config/hooks/normal/9999-final-touch.hook.chroot`
