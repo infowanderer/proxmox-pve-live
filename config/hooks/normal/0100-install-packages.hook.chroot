@@ -25,7 +25,6 @@ apt-get install $APT_OPTS \
     gnupg \
     wget \
     curl \
-    ckb-next \
     solaar \
     synaptic
 
@@ -53,18 +52,21 @@ apt-get install $APT_OPTS \
     rclone-browser
 
 # Install security applications
-# apt-get install $APT_OPTS \
-#    lynis \
-#    tiger \
-#    tiger-otheros \
-#    secure-delete \
-#    pass \
-#    tomb \
-#    pass-extension-tomb \
-#    firejail \
-#    firejail-profiles \
-#    firetools \
-    
+apt-get install $APT_OPTS \
+    lynis \
+    tiger \
+    tiger-otheros \
+    secure-delete \
+    pass \
+    tomb \
+    pass-extension-tomb \
+    firejail \
+    firejail-profiles \
+    firetools \
+    debsecan \
+    yasat \
+    gocryptfs \
+    cryfs
 
 # Install networking utilities
 apt-get install $APT_OPTS \
